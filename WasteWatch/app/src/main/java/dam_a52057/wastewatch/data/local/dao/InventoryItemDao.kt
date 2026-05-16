@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
+import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,6 +23,10 @@ interface InventoryItemDao {
 
     @Query("SELECT * FROM inventory_items WHERE isConsumed = 0 ORDER BY expiryDate ASC")
     fun getAllActiveItems(): Flow<List<InventoryItemEntity>>
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM inventory_items WHERE isConsumed = 0 ORDER BY expiryDate ASC")
+    fun getAllActiveItemsWithProduct(): Flow<List<InventoryItemWithProduct>>
 
     @Query("""
         SELECT * FROM inventory_items

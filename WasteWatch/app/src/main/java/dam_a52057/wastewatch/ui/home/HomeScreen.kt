@@ -101,8 +101,8 @@ fun HomeScreen(
         } else {
             items(uiState.top5Items) { item ->
                 InventoryItemCard(
-                    item = item,
-                    onClick = { onNavigateToItem(item.id) },
+                    itemWithProduct = item,
+                    onClick = { onNavigateToItem(item.item.id) },
                     onConsume = {},
                     onDelete = {}
                 )

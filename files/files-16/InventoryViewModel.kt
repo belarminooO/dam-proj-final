@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
-import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import dam_a52057.wastewatch.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,11 +12,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class InventoryUiState(
-    val items: List<InventoryItemWithProduct> = emptyList(),
+    val items: List<InventoryItemEntity> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val filterCategory: String? = null,
-    val selectedLocation: String? = null,
     val searchQuery: String = ""
 )
 
@@ -36,8 +34,9 @@ class InventoryViewModel @Inject constructor(
     private fun loadItems() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            inventoryRepository.getAllActiveItemsWithProduct().collectLatest { items ->
-                val filtered = applyFilters(items)
+            inventoryRepository.getAllItems().collectLatest { items ->
+                val active = items.filter { !it.isConsumed }
+                val filtered = applyFilters(active)
                 _uiState.value = _uiState.value.copy(
                     items = filtered,
                     isLoading = false
@@ -46,32 +45,17 @@ class InventoryViewModel @Inject constructor(
         }
     }
 
-    private fun applyFilters(items: List<InventoryItemWithProduct>): List<InventoryItemWithProduct> {
+    private fun applyFilters(items: List<InventoryItemEntity>): List<InventoryItemEntity> {
         var result = items
         val query = _uiState.value.searchQuery
-        val location = _uiState.value.selectedLocation
-
         if (query.isNotBlank()) {
-            result = result.filter { 
-                it.product.name.contains(query, ignoreCase = true) ||
-                it.product.barcode?.contains(query, ignoreCase = true) == true 
-            }
+            result = result.filter { it.barcode?.contains(query, ignoreCase = true) == true }
         }
-
-        if (location != null) {
-            result = result.filter { it.item.storageLocation == location }
-        }
-
-        return result.sortedBy { it.item.expiryDate }
+        return result.sortedBy { it.expiryDate }
     }
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
-        loadItems()
-    }
-
-    fun onLocationFilterChanged(location: String?) {
-        _uiState.value = _uiState.value.copy(selectedLocation = location)
         loadItems()
     }
 
@@ -83,7 +67,7 @@ class InventoryViewModel @Inject constructor(
 
     fun deleteItem(item: InventoryItemEntity) {
         viewModelScope.launch {
-            inventoryRepository.deleteItem(item.id)
+            inventoryRepository.deleteItem(item)
         }
     }
 }

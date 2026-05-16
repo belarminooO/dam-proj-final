@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
+import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import dam_a52057.wastewatch.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,7 @@ data class HomeUiState(
     val expiresTodayCount: Int = 0,
     val urgentCount: Int = 0,
     val totalCount: Int = 0,
-    val top5Items: List<InventoryItemEntity> = emptyList()
+    val top5Items: List<InventoryItemWithProduct> = emptyList()
 )
 
 @HiltViewModel
@@ -29,7 +30,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            inventoryRepository.getAllActiveItems().collectLatest { items ->
+            inventoryRepository.getAllActiveItemsWithProduct().collectLatest { items ->
                 val cal = Calendar.getInstance()
 
                 // início de hoje (00:00:00)
@@ -47,13 +48,13 @@ class HomeViewModel @Inject constructor(
                 cal.add(Calendar.DAY_OF_YEAR, 2) // já avançou 1, falta +2 = 3 total
                 val in3DaysStart = cal.timeInMillis
 
-                val active = items.filter { !it.isConsumed }
-
+                val active = items // items are already active
+                
                 _uiState.value = HomeUiState(
-                    expiresTodayCount = active.count { it.expiryDate in todayStart until tomorrowStart },
-                    urgentCount = active.count { it.expiryDate < in3DaysStart },
+                    expiresTodayCount = active.count { it.item.expiryDate in todayStart until tomorrowStart },
+                    urgentCount = active.count { it.item.expiryDate < in3DaysStart },
                     totalCount = active.size,
-                    top5Items = active.sortedBy { it.expiryDate }.take(5)
+                    top5Items = active.sortedBy { it.item.expiryDate }.take(5)
                 )
             }
         }

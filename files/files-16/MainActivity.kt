@@ -52,31 +52,31 @@ class MainActivity : ComponentActivity() {
                                 NavigationBarItem(
                                     selected = currentRoute == "home",
                                     onClick = { navController.navigate("home") { launchSingleTop = true } },
-                                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                                    icon = { Icon(Icons.Default.Home, null) },
                                     label = { Text("Home") }
                                 )
                                 NavigationBarItem(
                                     selected = currentRoute == "inventory",
                                     onClick = { navController.navigate("inventory") { launchSingleTop = true } },
-                                    icon = { Icon(Icons.Default.Inventory2, contentDescription = null) },
+                                    icon = { Icon(Icons.Default.Inventory2, null) },
                                     label = { Text("Inventario") }
                                 )
                                 NavigationBarItem(
                                     selected = currentRoute == "scanner",
                                     onClick = { navController.navigate("scanner") { launchSingleTop = true } },
-                                    icon = { Icon(Icons.Default.CameraAlt, contentDescription = null) },
+                                    icon = { Icon(Icons.Default.CameraAlt, null) },
                                     label = { Text("Scanner") }
                                 )
                                 NavigationBarItem(
                                     selected = currentRoute == "recipes",
                                     onClick = { navController.navigate("recipes") { launchSingleTop = true } },
-                                    icon = { Icon(Icons.Default.Restaurant, contentDescription = null) },
+                                    icon = { Icon(Icons.Default.Restaurant, null) },
                                     label = { Text("Receitas") }
                                 )
                                 NavigationBarItem(
                                     selected = currentRoute == "shopping",
                                     onClick = { navController.navigate("shopping") { launchSingleTop = true } },
-                                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
+                                    icon = { Icon(Icons.Default.ShoppingCart, null) },
                                     label = { Text("Compras") }
                                 )
                             }

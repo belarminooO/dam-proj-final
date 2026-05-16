@@ -3,6 +3,7 @@ package dam_a52057.wastewatch.data.repository
 import dam_a52057.wastewatch.data.local.dao.InventoryItemDao
 import dam_a52057.wastewatch.data.local.dao.ProductDao
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
+import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import dam_a52057.wastewatch.data.local.entity.ProductEntity
 import kotlinx.coroutines.flow.Flow
 import java.util.concurrent.TimeUnit
@@ -16,6 +17,9 @@ class InventoryRepository @Inject constructor(
 ) {
     fun getAllActiveItems(): Flow<List<InventoryItemEntity>> =
         inventoryItemDao.getAllActiveItems()
+
+    fun getAllActiveItemsWithProduct(): Flow<List<InventoryItemWithProduct>> =
+        inventoryItemDao.getAllActiveItemsWithProduct()
 
     fun getItemsExpiringWithinDays(days: Int): Flow<List<InventoryItemEntity>> {
         val threshold = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(days.toLong())

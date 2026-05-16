@@ -12,12 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
+import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun InventoryItemCard(
-    item: InventoryItemEntity,
+    itemWithProduct: InventoryItemWithProduct,
     onClick: () -> Unit,
     onConsume: () -> Unit,
     onDelete: () -> Unit,
@@ -38,8 +39,11 @@ fun InventoryItemCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    val item = itemWithProduct.item
+                    val product = itemWithProduct.product
+                    
                     Text(
-                        text = "Produto #${item.productId}",
+                        text = product.name,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -49,7 +53,7 @@ fun InventoryItemCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                ExpiryBadge(expiryDate = item.expiryDate)
+                ExpiryBadge(expiryDate = itemWithProduct.item.expiryDate)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -60,7 +64,7 @@ fun InventoryItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Validade: ${dateFormat.format(Date(item.expiryDate))}  •  Qtd: ${item.quantity}",
+                    text = "Validade: ${dateFormat.format(Date(itemWithProduct.item.expiryDate))}  •  Qtd: ${itemWithProduct.item.quantity}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

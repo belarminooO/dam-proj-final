@@ -49,7 +49,7 @@ fun InventoryScreen(
             // Search bar
             OutlinedTextField(
                 value = uiState.searchQuery,
-                onValueChange = viewModel::onSearchQueryChanged,
+                onValueChange = viewModel::onSearchQueryChange,
                 label = { Text("Pesquisar produtos...") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -123,12 +123,12 @@ fun InventoryScreen(
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(uiState.items, key = { it.id }) { item ->
+                    items(uiState.items, key = { it.item.id }) { item ->
                         InventoryItemCard(
-                            item = item,
-                            onClick = { onNavigateToDetail(item.id) },
-                            onConsume = { viewModel.consumeItem(item.id) },
-                            onDelete = { viewModel.deleteItem(item.id) }
+                            itemWithProduct = item,
+                            onClick = { onNavigateToDetail(item.item.id) },
+                            onConsume = { viewModel.consumeItem(item.item) },
+                            onDelete = { viewModel.deleteItem(item.item) }
                         )
                     }
                 }
