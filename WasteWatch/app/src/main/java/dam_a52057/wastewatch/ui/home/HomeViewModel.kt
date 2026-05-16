@@ -6,10 +6,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
 import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import dam_a52057.wastewatch.data.repository.InventoryRepository
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
@@ -51,5 +53,17 @@ class HomeViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = HomeUiState()
         )
+    }
+
+    fun consumeItem(item: InventoryItemEntity) {
+        viewModelScope.launch {
+            inventoryRepository.consumeItem(item)
+        }
+    }
+
+    fun deleteItem(item: InventoryItemEntity) {
+        viewModelScope.launch {
+            inventoryRepository.deleteItem(item)
+        }
     }
 }

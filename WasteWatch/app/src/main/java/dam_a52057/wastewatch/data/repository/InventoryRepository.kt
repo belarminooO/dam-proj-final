@@ -55,4 +55,16 @@ class InventoryRepository @Inject constructor(
 
     suspend fun getItemById(id: Int): InventoryItemEntity? =
         inventoryItemDao.getById(id)
+
+    suspend fun consumeItem(item: InventoryItemEntity) {
+        if (item.quantity > 1) {
+            inventoryItemDao.update(item.copy(quantity = item.quantity - 1))
+        } else {
+            inventoryItemDao.markAsConsumed(item.id)
+        }
+    }
+
+    suspend fun deleteItem(item: InventoryItemEntity) {
+        inventoryItemDao.deleteById(item.id)
+    }
 }

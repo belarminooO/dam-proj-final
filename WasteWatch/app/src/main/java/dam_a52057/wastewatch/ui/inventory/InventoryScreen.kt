@@ -115,11 +115,22 @@ fun InventoryScreen(
                     CircularProgressIndicator()
                 }
             } else if (uiState.items.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = "Nenhum item encontrado",
+                        text = if (uiState.searchQuery.isEmpty()) "O teu inventário está vazio" else "Nenhum item corresponde à pesquisa",
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (uiState.searchQuery.isEmpty()) {
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = onNavigateToAddProduct) {
+                            Text("Adicionar Primeiro Produto")
+                        }
+                    }
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {

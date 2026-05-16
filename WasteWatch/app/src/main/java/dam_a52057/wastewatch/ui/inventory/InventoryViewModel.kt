@@ -72,22 +72,18 @@ class InventoryViewModel @Inject constructor(
 
     fun consumeItem(item: InventoryItemEntity, addToShoppingList: Boolean = false, productName: String? = null) {
         viewModelScope.launch {
-            if (item.quantity > 1 && !addToShoppingList) {
-                // Se tiver mais que 1, apenas decrementa
-                inventoryRepository.updateItem(item.copy(quantity = item.quantity - 1))
-            } else {
-                // Se for a última unidade (ou se o utilizador confirmou a reposição no diálogo)
+            if (addToShoppingList && productName != null) {
                 inventoryRepository.updateItem(item.copy(isConsumed = true))
-                if (addToShoppingList && productName != null) {
-                    shoppingRepository.addItem(ShoppingItemEntity(name = productName))
-                }
+                shoppingRepository.addItem(ShoppingItemEntity(name = productName))
+            } else {
+                inventoryRepository.consumeItem(item)
             }
         }
     }
 
     fun deleteItem(item: InventoryItemEntity) {
         viewModelScope.launch {
-            inventoryRepository.deleteItem(item.id)
+            inventoryRepository.deleteItem(item)
         }
     }
 }
