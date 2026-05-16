@@ -28,6 +28,7 @@ import dam_a52057.wastewatch.notifications.ExpiryNotificationWorker
 import dam_a52057.wastewatch.ui.addproduct.AddProductScreen
 import dam_a52057.wastewatch.ui.auth.LoginScreen
 import dam_a52057.wastewatch.ui.auth.RegisterScreen
+import dam_a52057.wastewatch.ui.auth.SocialHubScreen
 import dam_a52057.wastewatch.ui.home.HomeScreen
 import dam_a52057.wastewatch.ui.inventory.InventoryScreen
 import dam_a52057.wastewatch.ui.inventory.ProductDetailScreen
@@ -127,7 +128,18 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             HomeScreen(
                                 onNavigateToInventory = { navController.navigate("inventory") },
+                                onNavigateToSocial = { navController.navigate("social_hub") },
                                 onNavigateToItem = { id -> navController.navigate("product_detail/$id") }
+                            )
+                        }
+                        composable("social_hub") {
+                            SocialHubScreen(
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo(0)
+                                    }
+                                },
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("inventory") {
