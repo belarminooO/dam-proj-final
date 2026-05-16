@@ -68,7 +68,7 @@ Implement `ProductDetailScreen` with item details, consume, edit, and delete act
 Create `ExpiryNotificationWorker` with WorkManager. Schedule daily check for items expiring within 2 days. Send one notification per urgent item found. Request `POST_NOTIFICATIONS` permission on Android 13+.
 
 ## Step 18
-Create local recipes database (JSON asset or Room). Implement `RecipesViewModel` with ingredient matching logic — prioritize recipes that use items expiring soonest. Implement `RecipesScreen` with recipe list.
+Integrate Gemini AI for recipe suggestions. Create `GeminiService` to send inventory item names (prioritizing expiring items) to the AI. Request structured JSON recipes. Implement `RecipesViewModel` and `RecipesScreen` to display AI-generated suggestions.
 
 ## Step 19
 Create `ShoppingRepository`. Implement `ShoppingListScreen` with checklist. Wire "Consumir" action in inventory to prompt adding the item to the shopping list.

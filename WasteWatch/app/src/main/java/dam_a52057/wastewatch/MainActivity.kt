@@ -36,7 +36,9 @@ import dam_a52057.wastewatch.ui.addproduct.AddProductScreen
 import dam_a52057.wastewatch.ui.home.HomeScreen
 import dam_a52057.wastewatch.ui.inventory.InventoryScreen
 import dam_a52057.wastewatch.ui.inventory.ProductDetailScreen
+import dam_a52057.wastewatch.ui.recipes.RecipesScreen
 import dam_a52057.wastewatch.ui.scanner.ScannerScreen
+import dam_a52057.wastewatch.ui.shopping.ShoppingListScreen
 import dam_a52057.wastewatch.ui.theme.WasteWatchTheme
 
 @AndroidEntryPoint
@@ -135,10 +137,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("recipes") {
-                            Box(Modifier.fillMaxSize().padding(16.dp)) { Text("Receitas — Em breve") }
+                            RecipesScreen()
                         }
                         composable("shopping") {
-                            Box(Modifier.fillMaxSize().padding(16.dp)) { Text("Lista de Compras — Em breve") }
+                            ShoppingListScreen()
                         }
                         composable(
                             route = "product_detail/{itemId}",

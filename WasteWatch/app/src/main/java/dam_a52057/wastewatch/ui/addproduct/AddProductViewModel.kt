@@ -9,6 +9,9 @@ import dam_a52057.wastewatch.data.local.entity.ProductEntity
 import dam_a52057.wastewatch.data.repository.InventoryRepository
 import dam_a52057.wastewatch.data.repository.ProductRepository
 import dam_a52057.wastewatch.data.local.dao.CategoryDao
+import dam_a52057.wastewatch.data.remote.ProductRemoteDataSource
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,8 +36,11 @@ data class AddProductUiState(
 class AddProductViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val inventoryRepository: InventoryRepository,
-    private val categoryDao: CategoryDao
+    private val categoryDao: CategoryDao,
+    private val remoteDataSource: ProductRemoteDataSource
 ) : ViewModel() {
+
+    private var searchJob: Job? = null
 
     private val _uiState = MutableStateFlow(AddProductUiState())
     val uiState: StateFlow<AddProductUiState> = _uiState.asStateFlow()
@@ -53,7 +59,29 @@ class AddProductViewModel @Inject constructor(
 
     fun onNameChanged(value: String) { _uiState.value = _uiState.value.copy(name = value) }
     fun onBrandChanged(value: String) { _uiState.value = _uiState.value.copy(brand = value) }
-    fun onBarcodeChanged(value: String) { _uiState.value = _uiState.value.copy(barcode = value) }
+    
+    fun onBarcodeChanged(value: String) { 
+        _uiState.value = _uiState.value.copy(barcode = value)
+        
+        // Se o código tiver comprimento padrão (8 ou 13), tenta procurar
+        if (value.length == 8 || value.length == 13) {
+            fetchProductDetails(value)
+        }
+    }
+
+    private fun fetchProductDetails(barcode: String) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(500) // Pequeno delay para evitar chamadas enquanto escreve
+            val result = remoteDataSource.fetchProductByBarcode(barcode)
+            result.onSuccess { productData ->
+                _uiState.value = _uiState.value.copy(
+                    name = productData.name ?: _uiState.value.name,
+                    brand = productData.brands ?: _uiState.value.brand
+                )
+            }
+        }
+    }
     fun onQuantityChanged(value: Int) { _uiState.value = _uiState.value.copy(quantity = value) }
     fun onLocationChanged(value: String) { _uiState.value = _uiState.value.copy(storageLocation = value) }
     fun onExpiryDateChanged(millis: Long) { _uiState.value = _uiState.value.copy(expiryDateMillis = millis) }
