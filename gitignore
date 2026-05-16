@@ -1,0 +1,26 @@
+# ── Pasta de ficheiros de trabalho local ──────────────────────────────────────
+files/
+
+# ── Android / Gradle ──────────────────────────────────────────────────────────
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+
+# ── Kotlin ────────────────────────────────────────────────────────────────────
+*.class
+*.kotlin_module
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
