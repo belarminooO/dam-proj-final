@@ -20,6 +20,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
+import dam_a52057.wastewatch.ui.addproduct.AddProductScreen
 import dam_a52057.wastewatch.ui.home.HomeScreen
 import dam_a52057.wastewatch.ui.inventory.InventoryScreen
 import dam_a52057.wastewatch.ui.theme.WasteWatchTheme
@@ -109,22 +110,18 @@ fun WasteWatchApp() {
                 )
             }
             composable(Screen.Scanner.route) {
-                // Step 15 — placeholder
                 Surface { Text("Scanner — Em breve") }
             }
             composable(Screen.Recipes.route) {
-                // Step 18 — placeholder
                 Surface { Text("Receitas — Em breve") }
             }
             composable(Screen.Shopping.route) {
-                // Step 19 — placeholder
                 Surface { Text("Lista de Compras — Em breve") }
             }
             composable(
                 route = "product_detail/{itemId}",
                 arguments = listOf(navArgument("itemId") { type = NavType.IntType })
             ) {
-                // Step 16 — placeholder
                 Surface { Text("Detalhe do Produto — Em breve") }
             }
             composable(
@@ -134,9 +131,11 @@ fun WasteWatchApp() {
                     nullable = true
                     defaultValue = null
                 })
-            ) {
-                // Step 13 — placeholder
-                Surface { Text("Adicionar Produto — Em breve") }
+            ) { backStackEntry ->
+                AddProductScreen(
+                    barcode = backStackEntry.arguments?.getString("barcode"),
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
     }
