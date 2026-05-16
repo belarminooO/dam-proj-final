@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.wastewatch"
+    namespace = "dam_a52057.wastewatch"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.wastewatch"
+        applicationId = "dam_a52057.wastewatch"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
