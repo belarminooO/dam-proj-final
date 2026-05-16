@@ -24,6 +24,35 @@ fun ProductDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val itemWithProduct = uiState.items.firstOrNull { it.item.id == itemId }
 
+    var showConsumeDialog by remember { mutableStateOf(false) }
+    val productName = itemWithProduct?.product?.name ?: ""
+
+    if (showConsumeDialog && itemWithProduct != null) {
+        AlertDialog(
+            onDismissRequest = { showConsumeDialog = false },
+            title = { Text("Repor Stock?") },
+            text = { Text("Queres adicionar '$productName' à tua lista de compras?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.consumeItem(itemWithProduct.item, addToShoppingList = true, productName = productName)
+                    showConsumeDialog = false
+                    onNavigateBack()
+                }) {
+                    Text("Sim, adicionar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    viewModel.consumeItem(itemWithProduct.item, addToShoppingList = false)
+                    showConsumeDialog = false
+                    onNavigateBack()
+                }) {
+                    Text("Não")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,12 +123,15 @@ fun ProductDetailScreen(
             // Botao Consumir
             Button(
                 onClick = {
-                    viewModel.consumeItem(item)
-                    onNavigateBack()
+                    if (item.quantity > 1) {
+                        viewModel.consumeItem(item)
+                    } else {
+                        showConsumeDialog = true
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Marcar como Consumido")
+                Text(if (item.quantity > 1) "Consumir 1 unidade" else "Marcar como Consumido")
             }
 
             // Botao Eliminar

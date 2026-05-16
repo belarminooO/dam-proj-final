@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
 import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
+import dam_a52057.wastewatch.data.local.entity.ShoppingItemEntity
 import dam_a52057.wastewatch.data.repository.InventoryRepository
+import dam_a52057.wastewatch.data.repository.ShoppingRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +27,8 @@ data class InventoryUiState(
 
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
-    private val inventoryRepository: InventoryRepository
+    private val inventoryRepository: InventoryRepository,
+    private val shoppingRepository: ShoppingRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -67,9 +70,18 @@ class InventoryViewModel @Inject constructor(
         _selectedLocation.value = location
     }
 
-    fun consumeItem(item: InventoryItemEntity) {
+    fun consumeItem(item: InventoryItemEntity, addToShoppingList: Boolean = false, productName: String? = null) {
         viewModelScope.launch {
-            inventoryRepository.updateItem(item.copy(isConsumed = true))
+            if (item.quantity > 1 && !addToShoppingList) {
+                // Se tiver mais que 1, apenas decrementa
+                inventoryRepository.updateItem(item.copy(quantity = item.quantity - 1))
+            } else {
+                // Se for a última unidade (ou se o utilizador confirmou a reposição no diálogo)
+                inventoryRepository.updateItem(item.copy(isConsumed = true))
+                if (addToShoppingList && productName != null) {
+                    shoppingRepository.addItem(ShoppingItemEntity(name = productName))
+                }
+            }
         }
     }
 
