@@ -15,7 +15,10 @@ import dagger.assisted.AssistedInject
 import dam_a52057.wastewatch.R
 import dam_a52057.wastewatch.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.first
-import java.util.concurrent.TimeUnit
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
 @HiltWorker
 class ExpiryNotificationWorker @AssistedInject constructor(
@@ -33,19 +36,25 @@ class ExpiryNotificationWorker @AssistedInject constructor(
         createNotificationChannel()
 
         val itemsWithProduct = inventoryRepository.getAllActiveItemsWithProduct().first()
-        val now = System.currentTimeMillis()
-        val twoDaysInMillis = TimeUnit.DAYS.toMillis(2)
+        val now = Instant.now()
+        val today = LocalDate.now()
+        val zoneId = ZoneId.systemDefault()
 
         val urgentItems = itemsWithProduct.filter { 
-            val timeUntilExpiry = it.item.expiryDate - now
-            timeUntilExpiry in 0..twoDaysInMillis || timeUntilExpiry < 0 // also include expired
+            val expiryInstant = Instant.ofEpochMilli(it.item.expiryDate)
+            val expiryDate = expiryInstant.atZone(zoneId).toLocalDate()
+            val daysBetween = ChronoUnit.DAYS.between(today, expiryDate)
+            
+            daysBetween <= 2
         }
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         var notificationId = 1
 
         for (itemInfo in urgentItems) {
-            val daysRemaining = TimeUnit.MILLISECONDS.toDays(itemInfo.item.expiryDate - now)
+            val expiryInstant = Instant.ofEpochMilli(itemInfo.item.expiryDate)
+            val expiryDate = expiryInstant.atZone(zoneId).toLocalDate()
+            val daysRemaining = ChronoUnit.DAYS.between(today, expiryDate)
             
             val message = when {
                 daysRemaining < 0 -> "${itemInfo.product.name} expirou há ${-daysRemaining} dia(s)!"

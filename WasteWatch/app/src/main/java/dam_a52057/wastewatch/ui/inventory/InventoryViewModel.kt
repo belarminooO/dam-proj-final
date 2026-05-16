@@ -7,8 +7,10 @@ import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
 import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import dam_a52057.wastewatch.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,53 +28,43 @@ class InventoryViewModel @Inject constructor(
     private val inventoryRepository: InventoryRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(InventoryUiState())
-    val uiState: StateFlow<InventoryUiState> = _uiState
+    private val _searchQuery = MutableStateFlow("")
+    private val _selectedLocation = MutableStateFlow<String?>(null)
 
-    init {
-        loadItems()
-    }
-
-    private fun loadItems() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            inventoryRepository.getAllActiveItemsWithProduct().collectLatest { items ->
-                val filtered = applyFilters(items)
-                _uiState.value = _uiState.value.copy(
-                    items = filtered,
-                    isLoading = false
-                )
+    val uiState: StateFlow<InventoryUiState> = combine(
+        inventoryRepository.getAllActiveItemsWithProduct(),
+        _searchQuery,
+        _selectedLocation
+    ) { items, query, location ->
+        val filtered = items.filter { itemWithProduct ->
+            val matchesQuery = if (query.isBlank()) true else {
+                itemWithProduct.product.name.contains(query, ignoreCase = true) ||
+                        itemWithProduct.product.barcode?.contains(query, ignoreCase = true) == true
             }
-        }
-    }
-
-    private fun applyFilters(items: List<InventoryItemWithProduct>): List<InventoryItemWithProduct> {
-        var result = items
-        val query = _uiState.value.searchQuery
-        val location = _uiState.value.selectedLocation
-
-        if (query.isNotBlank()) {
-            result = result.filter { 
-                it.product.name.contains(query, ignoreCase = true) ||
-                it.product.barcode?.contains(query, ignoreCase = true) == true 
+            val matchesLocation = if (location == null) true else {
+                itemWithProduct.item.storageLocation == location
             }
-        }
+            matchesQuery && matchesLocation
+        }.sortedBy { it.item.expiryDate }
 
-        if (location != null) {
-            result = result.filter { it.item.storageLocation == location }
-        }
-
-        return result.sortedBy { it.item.expiryDate }
-    }
+        InventoryUiState(
+            items = filtered,
+            searchQuery = query,
+            selectedLocation = location,
+            isLoading = false
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = InventoryUiState(isLoading = true)
+    )
 
     fun onSearchQueryChange(query: String) {
-        _uiState.value = _uiState.value.copy(searchQuery = query)
-        loadItems()
+        _searchQuery.value = query
     }
 
     fun onLocationFilterChanged(location: String?) {
-        _uiState.value = _uiState.value.copy(selectedLocation = location)
-        loadItems()
+        _selectedLocation.value = location
     }
 
     fun consumeItem(item: InventoryItemEntity) {

@@ -43,11 +43,16 @@ interface InventoryItemDao {
     fun getTotalActiveCount(): Flow<Int>
 
     @Query("""
-        SELECT COUNT(*) FROM inventory_items
-        WHERE isConsumed = 0
-          AND expiryDate <= :thresholdTimestamp
+        SELECT COUNT(*) FROM inventory_items 
+        WHERE isConsumed = 0 
+          AND expiryDate >= :startRange 
+          AND expiryDate < :endRange
     """)
-    fun getUrgentCount(thresholdTimestamp: Long): Flow<Int>
+    fun getCountInDateRange(startRange: Long, endRange: Long): Flow<Int>
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM inventory_items WHERE isConsumed = 0 ORDER BY expiryDate ASC LIMIT 5")
+    fun getTop5UrgentItemsWithProduct(): Flow<List<InventoryItemWithProduct>>
 
     @Query("SELECT * FROM inventory_items WHERE id = :id")
     suspend fun getById(id: Int): InventoryItemEntity?

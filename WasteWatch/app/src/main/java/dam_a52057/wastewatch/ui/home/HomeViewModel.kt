@@ -6,11 +6,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
 import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import dam_a52057.wastewatch.data.repository.InventoryRepository
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import java.util.Calendar
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -25,38 +26,30 @@ class HomeViewModel @Inject constructor(
     private val inventoryRepository: InventoryRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState
+    val uiState: StateFlow<HomeUiState> = run {
+        val now = LocalDate.now()
+        val zoneId = ZoneId.systemDefault()
+        
+        val todayStart = now.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val tomorrowStart = now.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val in3DaysStart = now.plusDays(3).atStartOfDay(zoneId).toInstant().toEpochMilli()
 
-    init {
-        viewModelScope.launch {
-            inventoryRepository.getAllActiveItemsWithProduct().collectLatest { items ->
-                val cal = Calendar.getInstance()
-
-                // início de hoje (00:00:00)
-                cal.set(Calendar.HOUR_OF_DAY, 0)
-                cal.set(Calendar.MINUTE, 0)
-                cal.set(Calendar.SECOND, 0)
-                cal.set(Calendar.MILLISECOND, 0)
-                val todayStart = cal.timeInMillis
-
-                // início de amanhã
-                cal.add(Calendar.DAY_OF_YEAR, 1)
-                val tomorrowStart = cal.timeInMillis
-
-                // início daqui a 3 dias
-                cal.add(Calendar.DAY_OF_YEAR, 2) // já avançou 1, falta +2 = 3 total
-                val in3DaysStart = cal.timeInMillis
-
-                val active = items // items are already active
-                
-                _uiState.value = HomeUiState(
-                    expiresTodayCount = active.count { it.item.expiryDate in todayStart until tomorrowStart },
-                    urgentCount = active.count { it.item.expiryDate < in3DaysStart },
-                    totalCount = active.size,
-                    top5Items = active.sortedBy { it.item.expiryDate }.take(5)
-                )
-            }
-        }
+        combine(
+            inventoryRepository.getCountInDateRange(todayStart, tomorrowStart),
+            inventoryRepository.getUrgentCount(in3DaysStart),
+            inventoryRepository.getTotalActiveCount(),
+            inventoryRepository.getTop5UrgentItemsWithProduct()
+        ) { today, urgent, total, top5 ->
+            HomeUiState(
+                expiresTodayCount = today,
+                urgentCount = urgent,
+                totalCount = total,
+                top5Items = top5
+            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeUiState()
+        )
     }
 }

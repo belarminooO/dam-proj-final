@@ -32,10 +32,14 @@ class InventoryRepository @Inject constructor(
     fun getTotalActiveCount(): Flow<Int> =
         inventoryItemDao.getTotalActiveCount()
 
-    fun getUrgentCount(days: Int = 3): Flow<Int> {
-        val threshold = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(days.toLong())
-        return inventoryItemDao.getUrgentCount(threshold)
-    }
+    fun getCountInDateRange(start: Long, end: Long): Flow<Int> =
+        inventoryItemDao.getCountInDateRange(start, end)
+
+    fun getUrgentCount(threshold: Long): Flow<Int> =
+        inventoryItemDao.getCountInDateRange(0, threshold) // simplified reuse
+
+    fun getTop5UrgentItemsWithProduct(): Flow<List<InventoryItemWithProduct>> =
+        inventoryItemDao.getTop5UrgentItemsWithProduct()
 
     suspend fun addItem(item: InventoryItemEntity): Long =
         inventoryItemDao.insert(item)
