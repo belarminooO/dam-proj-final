@@ -93,5 +93,17 @@ class ExpiryNotificationWorker @AssistedInject constructor(
 
     companion object {
         const val CHANNEL_ID = "EXPIRY_ALERTS"
+
+        fun schedule(context: Context) {
+            val workRequest = androidx.work.PeriodicWorkRequestBuilder<ExpiryNotificationWorker>(
+                1, java.util.concurrent.TimeUnit.DAYS
+            ).build()
+
+            androidx.work.WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                "ExpiryAlerts",
+                androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+                workRequest
+            )
+        }
     }
 }

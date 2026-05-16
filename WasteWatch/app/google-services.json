@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "434530458819",
+    "firebase_url": "https://friendlychat-1101a-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "friendlychat-1101a",
+    "storage_bucket": "friendlychat-1101a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434530458819:android:a47161a7bfdf37ede31676",
+        "android_client_info": {
+          "package_name": "com.google.firebase.codelab.friendlychat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "434530458819-49dpp3b6b2agrd0l0u4f67f2r6doldq9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkF5DfR0pIAyQLnxd7u6yl-5P7AL073qY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "434530458819-49dpp3b6b2agrd0l0u4f67f2r6doldq9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434530458819:android:ab4ff09801c0cde9e31676",
+        "android_client_info": {
+          "package_name": "com.notes.notesproxmlviews"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "434530458819-49dpp3b6b2agrd0l0u4f67f2r6doldq9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkF5DfR0pIAyQLnxd7u6yl-5P7AL073qY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "434530458819-49dpp3b6b2agrd0l0u4f67f2r6doldq9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434530458819:android:919d0b801f29e0d4e31676",
+        "android_client_info": {
+          "package_name": "dam_a52057.wastewatch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "434530458819-49dpp3b6b2agrd0l0u4f67f2r6doldq9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkF5DfR0pIAyQLnxd7u6yl-5P7AL073qY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "434530458819-49dpp3b6b2agrd0l0u4f67f2r6doldq9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,31 +8,26 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import dagger.hilt.android.AndroidEntryPoint
+import dam_a52057.wastewatch.data.repository.AuthRepository
 import dam_a52057.wastewatch.notifications.ExpiryNotificationWorker
 import dam_a52057.wastewatch.ui.addproduct.AddProductScreen
+import dam_a52057.wastewatch.ui.auth.LoginScreen
+import dam_a52057.wastewatch.ui.auth.RegisterScreen
 import dam_a52057.wastewatch.ui.home.HomeScreen
 import dam_a52057.wastewatch.ui.inventory.InventoryScreen
 import dam_a52057.wastewatch.ui.inventory.ProductDetailScreen
@@ -40,32 +35,31 @@ import dam_a52057.wastewatch.ui.recipes.RecipesScreen
 import dam_a52057.wastewatch.ui.scanner.ScannerScreen
 import dam_a52057.wastewatch.ui.shopping.ShoppingListScreen
 import dam_a52057.wastewatch.ui.theme.WasteWatchTheme
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
+
+    @Inject
+    lateinit var authRepository: AuthRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Schedule daily notification check
-        val workRequest = PeriodicWorkRequestBuilder<ExpiryNotificationWorker>(1, java.util.concurrent.TimeUnit.DAYS).build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "ExpiryNotificationWork",
-            ExistingPeriodicWorkPolicy.KEEP,
-            workRequest
-        )
-
         enableEdgeToEdge()
+        
+        // Iniciar notificações em background
+        ExpiryNotificationWorker.schedule(this)
+
         setContent {
             WasteWatchTheme {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    RequestNotificationPermission()
-                }
                 val navController = rememberNavController()
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-                val bottomNavRoutes = listOf("home", "inventory", "scanner", "recipes", "shopping")
+                val currentBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = currentBackStackEntry?.destination?.route
+                
+                val bottomNavRoutes = listOf("home", "inventory", "meal_plan", "recipes", "shopping")
                 val showBottomBar = bottomNavRoutes.any { currentRoute == it }
+
+                val startDestination = if (authRepository.currentUser != null) "home" else "login"
 
                 Scaffold(
                     bottomBar = {
@@ -80,14 +74,14 @@ class MainActivity : ComponentActivity() {
                                 NavigationBarItem(
                                     selected = currentRoute == "inventory",
                                     onClick = { navController.navigate("inventory") { launchSingleTop = true } },
-                                    icon = { Icon(Icons.Default.Inventory2, contentDescription = null) },
+                                    icon = { Icon(Icons.Default.ListAlt, contentDescription = null) },
                                     label = { Text("Inventario") }
                                 )
                                 NavigationBarItem(
-                                    selected = currentRoute == "scanner",
-                                    onClick = { navController.navigate("scanner") { launchSingleTop = true } },
-                                    icon = { Icon(Icons.Default.CameraAlt, contentDescription = null) },
-                                    label = { Text("Scanner") }
+                                    selected = currentRoute == "meal_plan",
+                                    onClick = { navController.navigate("meal_plan") { launchSingleTop = true } },
+                                    icon = { Icon(Icons.Default.EventNote, contentDescription = null) },
+                                    label = { Text("Plano") }
                                 )
                                 NavigationBarItem(
                                     selected = currentRoute == "recipes",
@@ -107,40 +101,63 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = "home",
+                        startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding)
                     ) {
+                        composable("login") {
+                            LoginScreen(
+                                onLoginSuccess = {
+                                    navController.navigate("home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToRegister = { navController.navigate("register") }
+                            )
+                        }
+                        composable("register") {
+                            RegisterScreen(
+                                onRegisterSuccess = {
+                                    navController.navigate("home") {
+                                        popUpTo("register") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToLogin = { navController.navigate("login") }
+                            )
+                        }
                         composable("home") {
                             HomeScreen(
                                 onNavigateToInventory = { navController.navigate("inventory") },
-                                onNavigateToItem = { itemId -> navController.navigate("product_detail/$itemId") }
+                                onNavigateToItem = { id -> navController.navigate("product_detail/$id") }
                             )
                         }
                         composable("inventory") {
                             InventoryScreen(
-                                onNavigateToAddProduct = { navController.navigate("add_product") },
-                                onNavigateToDetail = { itemId -> navController.navigate("product_detail/$itemId") }
+                                onNavigateToDetail = { id -> navController.navigate("product_detail/$id") },
+                                onNavigateToAddProduct = { navController.navigate("scanner") }
                             )
                         }
-                        composable("scanner") {
-                            ScannerScreen(
-                                onNavigateBack = { navController.popBackStack() },
-                                onNavigateToAddProduct = { barcode, name, brand ->
-                                    val params = mutableListOf<String>()
-                                    if (barcode != null) params.add("barcode=$barcode")
-                                    if (name != null) params.add("name=$name")
-                                    if (brand != null) params.add("brand=$brand")
-                                    val route = if (params.isEmpty()) "add_product"
-                                    else "add_product?${params.joinToString("&")}"
-                                    navController.navigate(route)
-                                }
-                            )
+                        composable("meal_plan") {
+                            Box(Modifier.fillMaxSize().padding(16.dp)) { Text("Calendário Semanal — Em breve") }
                         }
                         composable("recipes") {
                             RecipesScreen()
                         }
                         composable("shopping") {
                             ShoppingListScreen()
+                        }
+                        composable("scanner") {
+                            ScannerScreen(
+                                onBarcodeDetected = { barcode ->
+                                    navController.navigate("add_product?barcode=$barcode") {
+                                        popUpTo("scanner") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToManualAdd = {
+                                    navController.navigate("add_product") {
+                                        popUpTo("scanner") { inclusive = true }
+                                    }
+                                }
+                            )
                         }
                         composable(
                             route = "product_detail/{itemId}",
@@ -153,33 +170,20 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(
-                            route = "add_product?barcode={barcode}&name={name}&brand={brand}",
-                            arguments = listOf(
-                                navArgument("barcode") { type = NavType.StringType; nullable = true; defaultValue = null },
-                                navArgument("name") { type = NavType.StringType; nullable = true; defaultValue = null },
-                                navArgument("brand") { type = NavType.StringType; nullable = true; defaultValue = null }
-                            )
+                            route = "add_product?barcode={barcode}",
+                            arguments = listOf(navArgument("barcode") { 
+                                type = NavType.StringType
+                                nullable = true
+                            })
                         ) { backStackEntry ->
+                            val barcode = backStackEntry.arguments?.getString("barcode")
                             AddProductScreen(
-                                barcode = backStackEntry.arguments?.getString("barcode"),
+                                barcode = barcode,
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalPermissionsApi::class)
-@androidx.compose.runtime.Composable
-fun RequestNotificationPermission() {
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-        val permissionState = rememberPermissionState(permission = android.Manifest.permission.POST_NOTIFICATIONS)
-        LaunchedEffect(Unit) {
-            if (!permissionState.status.isGranted) {
-                permissionState.launchPermissionRequest()
             }
         }
     }

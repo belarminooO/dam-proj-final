@@ -32,8 +32,9 @@ import java.util.concurrent.Executors
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ScannerScreen(
-    onNavigateBack: () -> Unit,
-    onNavigateToAddProduct: (barcode: String?, name: String?, brand: String?) -> Unit,
+    onBarcodeDetected: (String) -> Unit,
+    onNavigateToManualAdd: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null, // Tornar opcional para flexibilidade
     viewModel: ScannerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -42,11 +43,7 @@ fun ScannerScreen(
 
     LaunchedEffect(uiState.navigateToAddProduct) {
         if (uiState.navigateToAddProduct) {
-            onNavigateToAddProduct(
-                uiState.scannedBarcode,
-                uiState.productData?.name,
-                uiState.productData?.brands
-            )
+            uiState.scannedBarcode?.let { onBarcodeDetected(it) } ?: onNavigateToManualAdd()
             viewModel.onNavigationHandled()
             scannerActive = false
         }
@@ -55,10 +52,12 @@ fun ScannerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Adicionar Produto") },
+                title = { Text("Scanner de Produto") },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                    if (onNavigateBack != null) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        }
                     }
                 }
             )
@@ -98,7 +97,7 @@ fun ScannerScreen(
                             }
                         } else {
                             Text(
-                                text = "Escanear Codigo de Barras\nAponte a camara para o codigo de barras do produto",
+                                text = "Escanear Código de Barras\nAponte a câmara para o código de barras do produto",
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(16.dp)
                             )
@@ -108,7 +107,7 @@ fun ScannerScreen(
             }
 
             uiState.error?.let { error ->
-                if (error != "Produto nao encontrado") {
+                if (error != "Produto não encontrado") {
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer
@@ -140,13 +139,13 @@ fun ScannerScreen(
             HorizontalDivider()
 
             Text(
-                text = "Nao consegue escanear o codigo?",
+                text = "Não consegue escanear o código?",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             OutlinedButton(
-                onClick = { onNavigateToAddProduct(null, null, null) },
+                onClick = onNavigateToManualAdd,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Adicionar Manualmente")
