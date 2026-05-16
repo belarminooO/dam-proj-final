@@ -76,3 +76,12 @@ Create `ShoppingRepository`. Implement `ShoppingListScreen` with checklist. Wire
 ## Step 20
 Handle all error and empty states across all screens (empty inventory, API error on scan, no recipes matched). Add loading indicators where data is being fetched. Review UI consistency across all screens.
 
+## Fase 6: Cloud Sync & Colaboração (Requisitos Sociais)
+
+- [ ] **Passo 21**: Setup Firebase (Auth, Firestore) e arquitetura de Sincronização (Repository Pattern + Offline Support).
+- [ ] **Passo 22**: Ecrãs de Autenticação (Login e Registo) com validação de campos.
+- [ ] **Passo 23**: Ecrã de Perfil & Central Social (Gestão de Códigos de Convite).
+- [ ] **Passo 24**: Implementação da "Minha Casa" (Household): Partilha total de stock e planeamento entre familiares.
+- [ ] **Passo 25**: Implementação de "Grupos de Festa": Privacidade de stock individual com geração de receitas coletivas (IA).
+- [ ] **Passo 26**: Ecrã de Planeamento Semanal: Grelha 7 dias x 3 refeições com sugestão de slots via Gemini.
+- [ ] **Passo 27**: Testes finais de sincronização Online/Offline e Polimento de UI.

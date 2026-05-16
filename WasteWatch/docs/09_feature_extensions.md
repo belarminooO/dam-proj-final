@@ -1,6 +1,21 @@
-# WasteWatch – Feature Extensions
+# WasteWatch # 09 Feature Extensions
 
-Extensões identificadas após a conclusão do plano de implementação base (`08_implementation_plan.md`). Cada nova funcionalidade é documentada aqui antes de ser implementada.
+Este documento regista as funcionalidades adicionais solicitadas pelo utilizador ou professor, para além do plano inicial.
+
+## 1. Grupos e Partilha Social (Requisito Professor)
+- **Firebase Auth**: Login para identificar utilizadores.
+- **Grupos Familiares**: Criar/Aderir a um grupo via código de convite.
+- **Planeamento Semanal Partilhado**: Menu semanal que o grupo pode editar, aceitar e marcar como feito.
+- **Receitas Coletivas**: Sugestões do Gemini baseadas na soma dos ingredientes de todos os membros do grupo (mantendo o stock individual privado).
+- **Organização de Eventos (Festas)**: Funcionalidade para organizar refeições de grupo com contribuição de ingredientes.
+
+## 2. Modo Offline/Online
+- Sincronização automática entre Room (Local) e Firestore (Cloud).
+- Persistência offline para garantir funcionamento em locais sem rede.
+
+## 3. Melhorias de UI (Autocomplete/Steppers)
+- Implementado Autocomplete na pesquisa do inventário.
+- Implementado Stepper (+/-) para seleção de quantidade.
 
 ---
 

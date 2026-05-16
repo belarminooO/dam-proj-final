@@ -5,28 +5,22 @@
 ```
 MainActivity (NavHost)
 │
-├── HomeScreen  ← start destination
-│   ├── → InventoryScreen  (botão "Ver Todos")
-│   └── → ProductDetailScreen  (clique num item urgente)
+├── AuthFlow
+│   ├── LoginScreen  ← start destination (if not logged in)
+│   └── RegisterScreen
 │
-├── InventoryScreen
-│   ├── → ProductDetailScreen  (clique num item)
-│   └── → AddProductScreen  (FAB adicionar)
-│
-├── ScannerScreen
-│   ├── → AddProductScreen  (scan bem-sucedido, dados pré-preenchidos)
-│   └── → AddProductScreen  (opção "Adicionar Manualmente")
-│
-├── RecipesScreen
-│   └── → RecipeDetailScreen  (clique numa receita)
-│
-├── ShoppingListScreen
+├── MainFlow (Bottom Nav)
+│   ├── HomeScreen
+│   │   └── → SocialHubScreen (ícone perfil no TopBar)
+│   ├── InventoryScreen
+│   │   └── → AddProductScreen (FAB)
+│   ├── MealPlanScreen (Calendário Semanal)
+│   ├── RecipesScreen (IA Suggestions)
+│   └── ShoppingListScreen
 │
 ├── ProductDetailScreen
-│   └── ← back → InventoryScreen / HomeScreen
-│
-└── AddProductScreen
-    └── ← back / save → InventoryScreen
+├── AddProductScreen
+└── RecipeDetailScreen
 ```
 
 ---
@@ -36,7 +30,7 @@ MainActivity (NavHost)
 Visível em todos os ecrãs principais.
 
 ```
-HomeScreen → InventoryScreen → ScannerScreen → RecipesScreen → ShoppingListScreen
+HomeScreen → InventoryScreen → MealPlanScreen → RecipesScreen → ShoppingListScreen
 ```
 
 ---
@@ -45,9 +39,12 @@ HomeScreen → InventoryScreen → ScannerScreen → RecipesScreen → ShoppingL
 
 ```kotlin
 object Routes {
+    const val LOGIN           = "login"
+    const val REGISTER        = "register"
     const val HOME            = "home"
+    const val SOCIAL_HUB      = "social_hub"
     const val INVENTORY       = "inventory"
-    const val SCANNER         = "scanner"
+    const val MEAL_PLAN       = "meal_plan"
     const val RECIPES         = "recipes"
     const val SHOPPING        = "shopping"
     const val PRODUCT_DETAIL  = "product_detail/{itemId}"
@@ -60,4 +57,4 @@ object Routes {
 ## Argumentos de Navegação
 
 - `ProductDetailScreen` recebe `itemId: Int`
-- `AddProductScreen` recebe `barcode: String?` (opcional, vindo do scanner)
+- `AddProductScreen` recebe `barcode: String?` (opcional)

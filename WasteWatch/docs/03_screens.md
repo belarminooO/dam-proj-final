@@ -13,6 +13,7 @@
 
 **Actions:**
 - Navegar para Inventário completo ("Ver Todos")
+- Aceder à **Central Social / Perfil** (ícone no topo)
 - Navegar para qualquer ecrã via Bottom Nav
 
 ---
@@ -134,12 +135,66 @@
 
 ---
 
-## Bottom Navigation Bar
+---
+
+## Screen: Login Screen
+
+**Components:**
+- Ilustração WasteWatch
+- Campo Email
+- Campo Password
+- Botão "Entrar"
+- Link "Não tem conta? Registe-se"
+
+**Actions:**
+- Autenticação via Firebase
+- Navegação para Dashboard após sucesso
+
+---
+
+## Screen: Register Screen
+
+**Components:**
+- Campo Nome
+- Campo Email
+- Campo Password
+- Botão "Criar Conta"
+- Link "Já tem conta? Faça Login"
+
+---
+
+## Screen: Social Hub / Profile Screen
+
+**Components:**
+- Nome e Email do utilizador
+- Secção "Minha Casa" (Household):
+    - Botão "Gerar Código de Convite"
+    - Botão "Aderir a uma Casa" (Input de código)
+    - Lista de membros da casa
+- Secção "Grupos de Festa" (Social Groups):
+    - Botão "Criar Novo Grupo"
+    - Lista de grupos ativos
+- Botão "Terminar Sessão" (Logout)
+
+---
+
+## Screen: Weekly Meal Planning Screen
+
+**Components:**
+- Seletor de Semana
+- Grelha Vertical (Segunda a Domingo)
+- Slots por dia: Matabixo, Almoço, Jantar
+- Cada slot vazio tem botão "Sugerir (IA)"
+- Slots preenchidos mostram o nome da receita e botão "Ver Receita"
+
+---
+
+## Bottom Navigation Bar (Atualizada)
 
 | Label | Rota | Ícone |
 |-------|------|-------|
 | Home | `home` | Home |
-| Inventário | `inventory` | Inventory2 |
-| Scanner | `scanner` | CameraAlt |
+| Inventário | `inventory` | ListAlt |
+| Plano | `meal_plan` | EventNote |
 | Receitas | `recipes` | Restaurant |
 | Compras | `shopping` | ShoppingCart |
