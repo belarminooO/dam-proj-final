@@ -5,9 +5,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -153,15 +156,45 @@ fun AddProductScreen(
                 }
             }
 
-            // Quantidade
-            OutlinedTextField(
-                value = uiState.quantity.toString(),
-                onValueChange = { it.toIntOrNull()?.let { v -> viewModel.onQuantityChanged(v) } },
-                label = { Text("Quantidade") },
+            // Quantidade (Stepper)
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.padding(start = 8.dp)) {
+                        Text("Quantidade", style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            text = uiState.quantity.toString(),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        FilledIconButton(
+                            onClick = { if (uiState.quantity > 1) viewModel.onQuantityChanged(uiState.quantity - 1) },
+                            colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Icon(Icons.Default.Remove, contentDescription = "Diminuir")
+                        }
+                        
+                        Spacer(Modifier.width(16.dp))
+                        
+                        FilledIconButton(
+                            onClick = { viewModel.onQuantityChanged(uiState.quantity + 1) },
+                            colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Aumentar")
+                        }
+                    }
+                }
+            }
 
             // Data de validade
             OutlinedTextField(
