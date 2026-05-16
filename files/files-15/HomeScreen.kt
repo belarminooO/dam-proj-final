@@ -103,8 +103,8 @@ fun HomeScreen(
                 InventoryItemCard(
                     item = item,
                     onClick = { onNavigateToItem(item.id) },
-                    onConsume = {},
-                    onDelete = {}
+                    onConsumeClick = {},
+                    onDeleteClick = {}
                 )
             }
         }
