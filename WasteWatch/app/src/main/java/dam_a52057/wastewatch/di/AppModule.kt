@@ -28,6 +28,24 @@ object AppModule {
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "wastewatch.db")
             .fallbackToDestructiveMigration()
+            .addCallback(object : androidx.room.RoomDatabase.Callback() {
+                override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    super.onCreate(db)
+                    seedCategories(db)
+                }
+
+                override fun onDestructiveMigration(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    super.onDestructiveMigration(db)
+                    seedCategories(db)
+                }
+
+                private fun seedCategories(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    val categories = listOf("Laticínios", "Carne", "Vegetais", "Frutas", "Padaria", "Bebidas", "Congelados", "Outros")
+                    categories.forEach { name ->
+                        db.execSQL("INSERT INTO categories (name) VALUES ('$name')")
+                    }
+                }
+            })
             .build()
 
     @Provides fun provideCategoryDao(db: AppDatabase): CategoryDao = db.categoryDao()

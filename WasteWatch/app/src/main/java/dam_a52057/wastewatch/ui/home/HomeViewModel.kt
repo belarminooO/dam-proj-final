@@ -6,7 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
 import dam_a52057.wastewatch.data.local.entity.InventoryItemWithProduct
 import dam_a52057.wastewatch.data.repository.InventoryRepository
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -27,6 +26,10 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val inventoryRepository: InventoryRepository
 ) : ViewModel() {
+
+    init {
+        inventoryRepository.startSync()
+    }
 
     val uiState: StateFlow<HomeUiState> = run {
         val now = LocalDate.now()
@@ -65,5 +68,10 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             inventoryRepository.deleteItem(item)
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        inventoryRepository.stopSync()
     }
 }

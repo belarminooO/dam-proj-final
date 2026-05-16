@@ -29,5 +29,8 @@ data class InventoryItemEntity(
     val quantity: Int = 1,
     val storageLocation: String = "Despensa",
     val addedDate: Long = System.currentTimeMillis(),
-    val isConsumed: Boolean = false
+    val isConsumed: Boolean = false,
+    val remoteId: String? = null,
+    val householdId: String? = null,
+    val lastUpdated: Long = System.currentTimeMillis()
 )

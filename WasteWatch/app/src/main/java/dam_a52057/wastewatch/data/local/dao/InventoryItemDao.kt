@@ -59,4 +59,17 @@ interface InventoryItemDao {
 
     @Query("UPDATE inventory_items SET isConsumed = 1 WHERE id = :id")
     suspend fun markAsConsumed(id: Int)
+
+    @androidx.room.Transaction
+    @Query("SELECT * FROM inventory_items WHERE id = :id")
+    suspend fun getWithProductById(id: Int): InventoryItemWithProduct?
+
+    @Query("UPDATE inventory_items SET remoteId = :remoteId, householdId = :householdId WHERE id = :id")
+    suspend fun updateRemoteId(id: Int, remoteId: String, householdId: String)
+
+    @Query("SELECT * FROM inventory_items WHERE remoteId = :remoteId")
+    suspend fun getByRemoteId(remoteId: String): InventoryItemEntity?
+
+    @Query("DELETE FROM inventory_items WHERE remoteId = :remoteId")
+    suspend fun deleteByRemoteId(remoteId: String)
 }
