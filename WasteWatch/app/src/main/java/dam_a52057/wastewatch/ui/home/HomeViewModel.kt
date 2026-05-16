@@ -9,8 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.ZoneId
+import java.util.Calendar
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -30,22 +29,31 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            inventoryRepository.getAllItems().collectLatest { items ->
-                val today = LocalDate.now()
-                val todayMillis = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                val tomorrowMillis = today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                val in3DaysMillis = today.plusDays(3).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            inventoryRepository.getAllActiveItems().collectLatest { items ->
+                val cal = Calendar.getInstance()
+
+                // início de hoje (00:00:00)
+                cal.set(Calendar.HOUR_OF_DAY, 0)
+                cal.set(Calendar.MINUTE, 0)
+                cal.set(Calendar.SECOND, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                val todayStart = cal.timeInMillis
+
+                // início de amanhã
+                cal.add(Calendar.DAY_OF_YEAR, 1)
+                val tomorrowStart = cal.timeInMillis
+
+                // início daqui a 3 dias
+                cal.add(Calendar.DAY_OF_YEAR, 2) // já avançou 1, falta +2 = 3 total
+                val in3DaysStart = cal.timeInMillis
 
                 val active = items.filter { !it.isConsumed }
-                val expiresToday = active.count { it.expiryDate in todayMillis until tomorrowMillis }
-                val urgent = active.count { it.expiryDate <= in3DaysMillis }
-                val top5 = active.sortedBy { it.expiryDate }.take(5)
 
                 _uiState.value = HomeUiState(
-                    expiresTodayCount = expiresToday,
-                    urgentCount = urgent,
+                    expiresTodayCount = active.count { it.expiryDate in todayStart until tomorrowStart },
+                    urgentCount = active.count { it.expiryDate < in3DaysStart },
                     totalCount = active.size,
-                    top5Items = top5
+                    top5Items = active.sortedBy { it.expiryDate }.take(5)
                 )
             }
         }
