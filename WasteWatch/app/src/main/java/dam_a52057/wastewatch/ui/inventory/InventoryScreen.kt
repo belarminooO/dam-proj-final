@@ -46,14 +46,40 @@ fun InventoryScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Search bar
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = viewModel::onSearchQueryChange,
-                label = { Text("Pesquisar produtos...") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+            // Search bar with Autocomplete
+            var searchExpanded by remember { mutableStateOf(false) }
+            
+            ExposedDropdownMenuBox(
+                expanded = searchExpanded && uiState.suggestions.isNotEmpty(),
+                onExpandedChange = { searchExpanded = it },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = {
+                        viewModel.onSearchQueryChange(it)
+                        searchExpanded = true
+                    },
+                    label = { Text("Pesquisar produtos...") },
+                    modifier = Modifier.fillMaxWidth().menuAnchor(),
+                    singleLine = true
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = searchExpanded && uiState.suggestions.isNotEmpty(),
+                    onDismissRequest = { searchExpanded = false }
+                ) {
+                    uiState.suggestions.forEach { suggestion ->
+                        DropdownMenuItem(
+                            text = { Text(suggestion) },
+                            onClick = {
+                                viewModel.onSearchQueryChange(suggestion)
+                                searchExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 

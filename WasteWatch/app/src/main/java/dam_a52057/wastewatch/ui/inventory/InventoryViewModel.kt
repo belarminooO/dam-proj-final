@@ -18,6 +18,7 @@ import javax.inject.Inject
 
 data class InventoryUiState(
     val items: List<InventoryItemWithProduct> = emptyList(),
+    val suggestions: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val filterCategory: String? = null,
@@ -50,8 +51,18 @@ class InventoryViewModel @Inject constructor(
             matchesQuery && matchesLocation
         }.sortedBy { it.item.expiryDate }
 
+        val suggestions = if (query.isNotEmpty()) {
+            items.map { it.product.name }
+                .filter { it.contains(query, ignoreCase = true) && !it.equals(query, ignoreCase = true) }
+                .distinct()
+                .take(5)
+        } else {
+            emptyList()
+        }
+
         InventoryUiState(
             items = filtered,
+            suggestions = suggestions,
             searchQuery = query,
             selectedLocation = location,
             isLoading = false
