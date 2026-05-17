@@ -24,6 +24,10 @@ class ShoppingViewModel @Inject constructor(
     private val shoppingRepository: ShoppingRepository
 ) : ViewModel() {
 
+    init {
+        shoppingRepository.startSync()
+    }
+
     private val _newItemName = MutableStateFlow("")
     
     val uiState: StateFlow<ShoppingUiState> = combine(
@@ -57,14 +61,7 @@ class ShoppingViewModel @Inject constructor(
 
     fun togglePurchased(item: ShoppingItemEntity) {
         viewModelScope.launch {
-            if (item.isPurchased) {
-                // Se já estava comprado, podíamos ter um método para desmarcar,
-                // mas para já vamos apenas permitir marcar como comprado.
-                // Vou adicionar suporte a desmarcar no repository se necessário.
-                shoppingRepository.addItem(item.copy(isPurchased = false))
-            } else {
-                shoppingRepository.markAsPurchased(item.id)
-            }
+            shoppingRepository.updateItem(item.copy(isPurchased = !item.isPurchased))
         }
     }
 
@@ -78,5 +75,10 @@ class ShoppingViewModel @Inject constructor(
         viewModelScope.launch {
             shoppingRepository.clearPurchased()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        shoppingRepository.stopSync()
     }
 }

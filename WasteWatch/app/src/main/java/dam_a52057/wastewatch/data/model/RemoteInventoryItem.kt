@@ -1,5 +1,7 @@
 package dam_a52057.wastewatch.data.model
 
+import com.google.firebase.firestore.PropertyName
+
 data class RemoteInventoryItem(
     val id: String = "",
     val productId: Int = 0,
@@ -9,6 +11,7 @@ data class RemoteInventoryItem(
     val expiryDate: Long = 0,
     val quantity: Int = 1,
     val storageLocation: String = "Despensa",
-    val isConsumed: Boolean = false,
+    @get:PropertyName("isConsumed") @set:PropertyName("isConsumed")
+    var isConsumed: Boolean = false,
     val lastUpdated: Long = System.currentTimeMillis()
 )

@@ -25,6 +25,24 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    if (uiState.showShoppingDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissShoppingDialog() },
+            title = { Text("Repor Stock") },
+            text = { Text("Acabaste de consumir o último ${uiState.itemToAddToShopping?.product?.name}. Queres adicioná-lo à lista de compras?") },
+            confirmButton = {
+                Button(onClick = { viewModel.confirmConsumption(true) }) {
+                    Text("Sim, adicionar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.confirmConsumption(false) }) {
+                    Text("Não, apenas consumir")
+                }
+            }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -122,7 +140,7 @@ fun HomeScreen(
                 InventoryItemCard(
                     itemWithProduct = item,
                     onClick = { onNavigateToItem(item.item.id) },
-                    onConsume = { viewModel.consumeItem(item.item) },
+                    onConsume = { viewModel.consumeItem(item) },
                     onDelete = { viewModel.deleteItem(item.item) }
                 )
             }

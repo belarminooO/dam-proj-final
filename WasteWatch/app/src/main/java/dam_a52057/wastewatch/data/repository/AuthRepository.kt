@@ -7,6 +7,7 @@ import dam_a52057.wastewatch.data.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,9 +21,12 @@ interface AuthRepository {
 }
 
 @Singleton
-class FirebaseAuthRepository @Inject constructor() : AuthRepository {
+class FirebaseAuthRepository @Inject constructor(
+    private val appDatabase: dam_a52057.wastewatch.data.local.AppDatabase
+) : AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
+    private val repositoryScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
 
     override val currentUser: FirebaseUser?
         get() = auth.currentUser
@@ -70,5 +74,9 @@ class FirebaseAuthRepository @Inject constructor() : AuthRepository {
 
     override fun logout() {
         auth.signOut()
+        repositoryScope.launch {
+            appDatabase.inventoryItemDao().clearAll()
+            appDatabase.shoppingItemDao().clearAll()
+        }
     }
 }

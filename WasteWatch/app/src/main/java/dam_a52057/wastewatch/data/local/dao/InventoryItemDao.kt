@@ -72,4 +72,7 @@ interface InventoryItemDao {
 
     @Query("DELETE FROM inventory_items WHERE remoteId = :remoteId")
     suspend fun deleteByRemoteId(remoteId: String)
+
+    @Query("DELETE FROM inventory_items")
+    suspend fun clearAll()
 }

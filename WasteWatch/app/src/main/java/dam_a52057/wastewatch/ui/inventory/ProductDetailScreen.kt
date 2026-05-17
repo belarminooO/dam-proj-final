@@ -34,7 +34,7 @@ fun ProductDetailScreen(
             text = { Text("Queres adicionar '$productName' à tua lista de compras?") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.consumeItem(itemWithProduct.item, addToShoppingList = true, productName = productName)
+                    viewModel.confirmConsumption(true) // Agora usamos a lógica centralizada
                     showConsumeDialog = false
                     onNavigateBack()
                 }) {
@@ -43,7 +43,7 @@ fun ProductDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = {
-                    viewModel.consumeItem(itemWithProduct.item, addToShoppingList = false)
+                    viewModel.confirmConsumption(false)
                     showConsumeDialog = false
                     onNavigateBack()
                 }) {
@@ -124,8 +124,10 @@ fun ProductDetailScreen(
             Button(
                 onClick = {
                     if (item.quantity > 1) {
-                        viewModel.consumeItem(item)
+                        viewModel.consumeItem(itemWithProduct)
                     } else {
+                        // Preparamos o estado para o diálogo local usar
+                        viewModel.consumeItem(itemWithProduct) 
                         showConsumeDialog = true
                     }
                 },

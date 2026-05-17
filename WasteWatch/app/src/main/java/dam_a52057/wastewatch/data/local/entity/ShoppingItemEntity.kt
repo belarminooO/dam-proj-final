@@ -9,5 +9,10 @@ data class ShoppingItemEntity(
     val id: Int = 0,
     val name: String,
     val quantity: Int = 1,
-    val isPurchased: Boolean = false
+    val isPurchased: Boolean = false,
+    
+    // Cloud Sync fields
+    val remoteId: String? = null,
+    val householdId: String? = null,
+    val lastUpdated: Long = System.currentTimeMillis()
 )

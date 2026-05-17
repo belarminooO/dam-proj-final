@@ -14,6 +14,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -28,6 +30,7 @@ class InventoryRepository @Inject constructor(
     private val db = FirebaseFirestore.getInstance()
     private var syncListener: ListenerRegistration? = null
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
+    private val syncMutex = Mutex()
     
     // Cache para evitar processar itens que nós próprios acabámos de enviar
     private val beingProcessedRemoteIds = mutableSetOf<String>()
@@ -45,14 +48,16 @@ class InventoryRepository @Inject constructor(
         inventoryItemDao.getCountInDateRange(0, threshold)
 
     suspend fun addItem(item: InventoryItemEntity): Long {
-        val id = inventoryItemDao.insert(item)
-        syncItemToCloud(id)
+        val updatedItem = item.copy(lastUpdated = System.currentTimeMillis())
+        val id = inventoryItemDao.insert(updatedItem)
+        repositoryScope.launch { syncItemToCloud(id) }
         return id
     }
 
     suspend fun updateItem(item: InventoryItemEntity) {
-        inventoryItemDao.update(item)
-        syncItemToCloud(item.id.toLong())
+        val updatedItem = item.copy(lastUpdated = System.currentTimeMillis())
+        inventoryItemDao.update(updatedItem)
+        repositoryScope.launch { syncItemToCloud(updatedItem.id.toLong()) }
     }
 
     suspend fun deleteItem(item: InventoryItemEntity) {
@@ -73,8 +78,11 @@ class InventoryRepository @Inject constructor(
     }
 
     suspend fun markAsConsumed(id: Int) {
-        inventoryItemDao.markAsConsumed(id)
-        syncItemToCloud(id.toLong())
+        // Atualizar timestamp local para garantir que ganhamos a qualquer mudança remota antiga
+        val item = inventoryItemDao.getById(id) ?: return
+        val updatedItem = item.copy(isConsumed = true, lastUpdated = System.currentTimeMillis())
+        inventoryItemDao.update(updatedItem)
+        repositoryScope.launch { syncItemToCloud(id.toLong()) }
     }
 
     suspend fun getItemById(id: Int): InventoryItemEntity? =
@@ -143,7 +151,7 @@ class InventoryRepository @Inject constructor(
                 quantity = itemWithProduct.item.quantity,
                 storageLocation = itemWithProduct.item.storageLocation,
                 isConsumed = itemWithProduct.item.isConsumed,
-                lastUpdated = System.currentTimeMillis()
+                lastUpdated = itemWithProduct.item.lastUpdated // Usar sempre o timestamp local como fonte de verdade
             )
 
             val collection = db.collection("households").document(householdId).collection("inventory")
@@ -166,56 +174,58 @@ class InventoryRepository @Inject constructor(
     }
 
     private suspend fun handleRemoteChange(remoteItem: RemoteInventoryItem, householdId: String) {
-        try {
-            var localProduct = productDao.getProductById(remoteItem.productId)
-            if (localProduct == null) {
-                localProduct = ProductEntity(
-                    id = remoteItem.productId,
-                    name = remoteItem.productName,
-                    brand = remoteItem.productBrand,
-                    barcode = null
-                )
-                productDao.insert(localProduct)
-            }
-
-            // 1. Tentar encontrar pelo remoteId
-            var existingItem = inventoryItemDao.getByRemoteId(remoteItem.id)
-            
-            // 2. Se não encontrar, tentar encontrar um item local "órfão" (sem remoteId) que seja idêntico
-            if (existingItem == null) {
-                val orphanItems = inventoryItemDao.getAllActiveItems().first()
-                existingItem = orphanItems.find { 
-                    it.remoteId == null && 
-                    it.productId == remoteItem.productId && 
-                    it.expiryDate == remoteItem.expiryDate &&
-                    it.quantity == remoteItem.quantity
+        syncMutex.withLock {
+            try {
+                var localProduct = productDao.getProductById(remoteItem.productId)
+                if (localProduct == null) {
+                    localProduct = ProductEntity(
+                        id = remoteItem.productId,
+                        name = remoteItem.productName,
+                        brand = remoteItem.productBrand,
+                        barcode = null
+                    )
+                    productDao.insert(localProduct)
                 }
+
+                // 1. Tentar encontrar pelo remoteId
+                var existingItem = inventoryItemDao.getByRemoteId(remoteItem.id)
                 
-                // Se encontramos um órfão, vamos "batizá-lo" com o remoteId em vez de criar um novo
-                if (existingItem != null) {
-                    inventoryItemDao.updateRemoteId(existingItem.id, remoteItem.id, householdId)
+                // 2. Se não encontrar, tentar encontrar um item local "órfão" (sem remoteId) que seja idêntico
+                if (existingItem == null) {
+                    val orphanItems = inventoryItemDao.getAllActiveItems().first()
+                    existingItem = orphanItems.find { 
+                        it.remoteId == null && 
+                        it.productId == remoteItem.productId && 
+                        it.expiryDate == remoteItem.expiryDate &&
+                        it.quantity == remoteItem.quantity
+                    }
+                    
+                    // Se encontramos um órfão, vamos "batizá-lo" com o remoteId em vez de criar um novo
+                    if (existingItem != null) {
+                        inventoryItemDao.updateRemoteId(existingItem.id, remoteItem.id, householdId)
+                    }
                 }
-            }
 
-            val newItem = InventoryItemEntity(
-                id = existingItem?.id ?: 0,
-                productId = remoteItem.productId,
-                expiryDate = remoteItem.expiryDate,
-                quantity = remoteItem.quantity,
-                storageLocation = remoteItem.storageLocation,
-                isConsumed = remoteItem.isConsumed,
-                remoteId = remoteItem.id,
-                householdId = householdId,
-                lastUpdated = remoteItem.lastUpdated
-            )
+                val newItem = InventoryItemEntity(
+                    id = existingItem?.id ?: 0,
+                    productId = remoteItem.productId,
+                    expiryDate = remoteItem.expiryDate,
+                    quantity = remoteItem.quantity,
+                    storageLocation = remoteItem.storageLocation,
+                    isConsumed = remoteItem.isConsumed,
+                    remoteId = remoteItem.id,
+                    householdId = householdId,
+                    lastUpdated = remoteItem.lastUpdated
+                )
 
-            if (existingItem == null) {
-                inventoryItemDao.insert(newItem)
-            } else if (remoteItem.lastUpdated > existingItem.lastUpdated) {
-                inventoryItemDao.update(newItem)
+                if (existingItem == null) {
+                    inventoryItemDao.insert(newItem)
+                } else if (remoteItem.lastUpdated > existingItem.lastUpdated) {
+                    inventoryItemDao.update(newItem)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 
