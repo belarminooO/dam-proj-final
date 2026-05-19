@@ -86,4 +86,23 @@ Handle all API errors (network timeout, 404, server error) gracefully across the
 
 ---
 
+## Extension 5 – Planeamento Semanal de Refeições e Colaboração Social
+
+**Description:**
+Implementação da partilha de stock real em tempo real entre membros de uma mesma casa, planeamento em grupo com fusão lógica de stocks individuais e grelha semanal de planeamento alimentar de 7 dias com sugestões inteligentes e segmentadas da IA (Gemini).
+
+**Implementation tasks:**
+- Adicionar entidade Room `MealPlanEntity` e o respetivo `MealPlanDao` no local DB.
+- Criar a coleção Firestore `households/{householdId}/meal_plans` e o listener correspondente para sincronização em tempo real.
+- Criar coleção Firestore `groups` para gerir grupos de festa e permitir a visualização de stocks acumulados dos membros.
+- Atualizar o `GeminiService` para suportar pedidos específicos por tipo de refeição (`MATABIXO`, `ALMOCO`, `JANTAR`).
+- Desenhar o ecrã vertical/grelha de planeamento alimentar em Jetpack Compose com carrossel dinâmico para seleção das sugestões da IA.
+
+**Expected UI changes:**
+- Nova grelha interativa no ecrã "Plano" (MealPlanScreen).
+- Diálogos de sugestões por IA com carrossel premium de 3 opções.
+- Painel social atualizado para ver membros da casa e grupos ativos.
+
+---
+
 *(Adicionar novas extensões aqui conforme forem identificadas durante o desenvolvimento)*
