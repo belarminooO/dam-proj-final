@@ -29,7 +29,7 @@ enum class PlanType {
 }
 
 data class MealPlannerUiState(
-    val planType: PlanType = PlanType.PERSONAL,
+    val planType: PlanType = PlanType.HOUSEHOLD,
     val weekStartDate: Long = 0L,
     val currentWeekLabel: String = "",
     val mealPlans: Map<String, Map<String, MealPlanEntity>> = emptyMap(),
@@ -65,7 +65,7 @@ class MealPlannerViewModel @Inject constructor(
     private val db = FirebaseFirestore.getInstance()
     private val _depletedItemsPrompt = MutableStateFlow<List<InventoryItemWithProduct>>(emptyList())
 
-    private val _planType = MutableStateFlow(PlanType.PERSONAL)
+    private val _planType = MutableStateFlow(PlanType.HOUSEHOLD)
     private val _currentWeekOffset = MutableStateFlow(0)
     private val _selectedGroupId = MutableStateFlow<String?>(null)
     

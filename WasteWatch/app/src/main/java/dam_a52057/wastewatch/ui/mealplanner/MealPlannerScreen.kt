@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -157,30 +158,20 @@ fun MealPlannerScreen(
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // 1. Seletor de Tipo de Plano (Pessoal, Casa, Grupo)
+            // 1. Seletor de Tipo de Plano (Casa, Grupo)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Pessoal
+                // Minha Casa
                 FilterChip(
-                    selected = uiState.planType == PlanType.PERSONAL,
-                    onClick = { viewModel.setPlanType(PlanType.PERSONAL) },
-                    label = { Text("Pessoal") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    selected = uiState.planType == PlanType.HOUSEHOLD,
+                    onClick = { viewModel.setPlanType(PlanType.HOUSEHOLD) },
+                    label = { Text("Minha Casa") },
+                    leadingIcon = { Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
-
-                // Casa (se tiver Household)
-                if (uiState.householdId != null) {
-                    FilterChip(
-                        selected = uiState.planType == PlanType.HOUSEHOLD,
-                        onClick = { viewModel.setPlanType(PlanType.HOUSEHOLD) },
-                        label = { Text("Minha Casa") },
-                        leadingIcon = { Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                    )
-                }
 
                 // Grupos de Festa (se tiver grupos)
                 if (uiState.partyGroups.isNotEmpty()) {
@@ -243,76 +234,118 @@ fun MealPlannerScreen(
                 }
             }
 
-            // 2. Navegador de Semanas
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Row(
+            if (uiState.householdId == null && uiState.planType == PlanType.HOUSEHOLD) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = { viewModel.previousWeek() }) {
-                        Icon(Icons.Default.ChevronLeft, contentDescription = "Semana Anterior")
-                    }
-
-                    Text(
-                        text = uiState.currentWeekLabel,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    IconButton(onClick = { viewModel.nextWeek() }) {
-                        Icon(Icons.Default.ChevronRight, contentDescription = "Semana Seguinte")
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Home,
+                                contentDescription = null,
+                                modifier = Modifier.size(56.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Nenhuma Casa Detetada",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Cria ou adere a uma Casa no ecrã Social/Perfil para começares a planear as tuas refeições partilhadas.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
-            }
+            } else {
+                // 2. Navegador de Semanas
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { viewModel.previousWeek() }) {
+                            Icon(Icons.Default.ChevronLeft, contentDescription = "Semana Anterior")
+                        }
 
-            // 3. Grelha de Dias da Semana
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                items(daysOfWeek) { (dayKey, dayLabel) ->
-                    DayCard(
-                        dayLabel = dayLabel,
-                        dayKey = dayKey,
-                        mealTypes = mealTypes,
-                        mealPlans = uiState.mealPlans[dayKey] ?: emptyMap(),
-                        onAddManual = { mealType ->
-                            selectedDayForAdd = dayKey
-                            selectedMealTypeForAdd = mealType
-                            manualMealName = ""
-                            showManualAddDialog = true
-                        },
-                        onAddGemini = { mealType ->
-                            viewModel.loadGeminiSuggestions(dayKey, mealType)
-                            selectedDayForAdd = dayKey
-                            selectedMealTypeForAdd = mealType
-                        },
-                        onToggleDone = { plan -> 
-                            if (!plan.isDone) {
-                                selectedPlanToToggle = plan
-                                showConsumeConfirmDialog = true
-                            } else {
-                                viewModel.toggleMealPlanDone(plan)
-                            }
-                        },
-                        onViewDetails = { plan -> selectedMealForDetails = plan }
-                    )
+                        Text(
+                            text = uiState.currentWeekLabel,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        IconButton(onClick = { viewModel.nextWeek() }) {
+                            Icon(Icons.Default.ChevronRight, contentDescription = "Semana Seguinte")
+                        }
+                    }
+                }
+
+                // 3. Grelha de Dias da Semana
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    items(daysOfWeek) { (dayKey, dayLabel) ->
+                        DayCard(
+                            dayLabel = dayLabel,
+                            dayKey = dayKey,
+                            mealTypes = mealTypes,
+                            mealPlans = uiState.mealPlans[dayKey] ?: emptyMap(),
+                            onAddManual = { mealType ->
+                                selectedDayForAdd = dayKey
+                                selectedMealTypeForAdd = mealType
+                                manualMealName = ""
+                                showManualAddDialog = true
+                            },
+                            onAddGemini = { mealType ->
+                                viewModel.loadGeminiSuggestions(dayKey, mealType)
+                                selectedDayForAdd = dayKey
+                                selectedMealTypeForAdd = mealType
+                            },
+                            onToggleDone = { plan -> 
+                                if (!plan.isDone) {
+                                    selectedPlanToToggle = plan
+                                    showConsumeConfirmDialog = true
+                                } else {
+                                    viewModel.toggleMealPlanDone(plan)
+                                }
+                            },
+                            onViewDetails = { plan -> selectedMealForDetails = plan }
+                        )
+                    }
                 }
             }
         }
