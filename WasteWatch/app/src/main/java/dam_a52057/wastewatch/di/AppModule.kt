@@ -12,6 +12,7 @@ import dam_a52057.wastewatch.data.local.dao.CategoryDao
 import dam_a52057.wastewatch.data.local.dao.InventoryItemDao
 import dam_a52057.wastewatch.data.local.dao.ProductDao
 import dam_a52057.wastewatch.data.local.dao.ShoppingItemDao
+import dam_a52057.wastewatch.data.local.dao.MealPlanDao
 import dam_a52057.wastewatch.data.remote.OpenFoodFactsApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,9 +35,21 @@ object AppModule {
                     seedCategories(db)
                 }
 
-                override fun onDestructiveMigration(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-                    super.onDestructiveMigration(db)
-                    seedCategories(db)
+                override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    super.onOpen(db)
+                    try {
+                        val cursor = db.query("SELECT COUNT(*) FROM categories")
+                        var count = 0
+                        if (cursor.moveToFirst()) {
+                            count = cursor.getInt(0)
+                        }
+                        cursor.close()
+                        if (count == 0) {
+                            seedCategories(db)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
 
                 private fun seedCategories(db: androidx.sqlite.db.SupportSQLiteDatabase) {
@@ -52,6 +65,7 @@ object AppModule {
     @Provides fun provideProductDao(db: AppDatabase): ProductDao = db.productDao()
     @Provides fun provideInventoryItemDao(db: AppDatabase): InventoryItemDao = db.inventoryItemDao()
     @Provides fun provideShoppingItemDao(db: AppDatabase): ShoppingItemDao = db.shoppingItemDao()
+    @Provides fun provideMealPlanDao(db: AppDatabase): MealPlanDao = db.mealPlanDao()
 
     @Provides
     @Singleton

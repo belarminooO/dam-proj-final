@@ -241,4 +241,25 @@ class InventoryRepository @Inject constructor(
 
     fun getTotalActiveCount(): Flow<Int> = inventoryItemDao.getTotalActiveCount()
     fun getTop5UrgentItemsWithProduct(): Flow<List<InventoryItemWithProduct>> = inventoryItemDao.getTop5UrgentItemsWithProduct()
+
+    suspend fun seedTestData() {
+        val now = System.currentTimeMillis()
+        val oneDay = 24 * 60 * 60 * 1000L
+        
+        // 1. Inserir produtos de teste
+        val p1Id = productDao.insert(ProductEntity(name = "Peito de Frango", brand = "Lidl Poupança", categoryId = 2))
+        val p2Id = productDao.insert(ProductEntity(name = "Arroz Agulha", brand = "Cigala", categoryId = 8))
+        val p3Id = productDao.insert(ProductEntity(name = "Molho de Tomate", brand = "Guloso", categoryId = 8))
+        val p4Id = productDao.insert(ProductEntity(name = "Queijo Flamengo", brand = "Terra Nostra", categoryId = 1))
+        val p5Id = productDao.insert(ProductEntity(name = "Leite Meio Gordo", brand = "Mimosa", categoryId = 1))
+        val p6Id = productDao.insert(ProductEntity(name = "Ovos do Campo XL", brand = "Matutano", categoryId = 8))
+        
+        // 2. Inserir itens de inventário correspondentes
+        addItem(InventoryItemEntity(productId = p1Id.toInt(), expiryDate = now + oneDay * 2, quantity = 2, storageLocation = "Frigorífico"))
+        addItem(InventoryItemEntity(productId = p2Id.toInt(), expiryDate = now + oneDay * 30, quantity = 1, storageLocation = "Despensa"))
+        addItem(InventoryItemEntity(productId = p3Id.toInt(), expiryDate = now + oneDay * 15, quantity = 3, storageLocation = "Despensa"))
+        addItem(InventoryItemEntity(productId = p4Id.toInt(), expiryDate = now + oneDay * 4, quantity = 2, storageLocation = "Frigorífico"))
+        addItem(InventoryItemEntity(productId = p5Id.toInt(), expiryDate = now + oneDay * 7, quantity = 4, storageLocation = "Frigorífico"))
+        addItem(InventoryItemEntity(productId = p6Id.toInt(), expiryDate = now + oneDay * 3, quantity = 12, storageLocation = "Frigorífico"))
+    }
 }

@@ -9,10 +9,12 @@ import dam_a52057.wastewatch.data.local.dao.CategoryDao
 import dam_a52057.wastewatch.data.local.dao.InventoryItemDao
 import dam_a52057.wastewatch.data.local.dao.ProductDao
 import dam_a52057.wastewatch.data.local.dao.ShoppingItemDao
+import dam_a52057.wastewatch.data.local.dao.MealPlanDao
 import dam_a52057.wastewatch.data.local.entity.CategoryEntity
 import dam_a52057.wastewatch.data.local.entity.InventoryItemEntity
 import dam_a52057.wastewatch.data.local.entity.ProductEntity
 import dam_a52057.wastewatch.data.local.entity.ShoppingItemEntity
+import dam_a52057.wastewatch.data.local.entity.MealPlanEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,9 +24,10 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         ProductEntity::class,
         InventoryItemEntity::class,
-        ShoppingItemEntity::class
+        ShoppingItemEntity::class,
+        MealPlanEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -33,6 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun inventoryItemDao(): InventoryItemDao
     abstract fun shoppingItemDao(): ShoppingItemDao
+    abstract fun mealPlanDao(): MealPlanDao
 
     companion object {
         private val PREPOPULATE_CATEGORIES = listOf(
@@ -52,6 +56,7 @@ abstract class AppDatabase : RoomDatabase() {
                 AppDatabase::class.java,
                 "wastewatch.db"
             )
+                .fallbackToDestructiveMigration()
                 .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)

@@ -35,6 +35,7 @@ import dam_a52057.wastewatch.ui.inventory.ProductDetailScreen
 import dam_a52057.wastewatch.ui.recipes.RecipesScreen
 import dam_a52057.wastewatch.ui.scanner.ScannerScreen
 import dam_a52057.wastewatch.ui.shopping.ShoppingListScreen
+import dam_a52057.wastewatch.ui.mealplanner.MealPlannerScreen
 import dam_a52057.wastewatch.ui.theme.WasteWatchTheme
 import javax.inject.Inject
 
@@ -149,7 +150,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("meal_plan") {
-                            Box(Modifier.fillMaxSize().padding(16.dp)) { Text("Calendário Semanal — Em breve") }
+                            MealPlannerScreen()
                         }
                         composable("recipes") {
                             RecipesScreen()

@@ -18,6 +18,7 @@ import javax.inject.Inject
 
 data class InventoryUiState(
     val items: List<InventoryItemWithProduct> = emptyList(),
+    val allActiveItems: List<InventoryItemWithProduct> = emptyList(),
     val suggestions: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -26,7 +27,8 @@ data class InventoryUiState(
     val searchQuery: String = "",
     // Diálogo de reposição
     val showShoppingDialog: Boolean = false,
-    val itemToAddToShopping: InventoryItemWithProduct? = null
+    val itemToAddToShopping: InventoryItemWithProduct? = null,
+    val depletedItemsToPrompt: List<InventoryItemWithProduct> = emptyList()
 )
 
 @HiltViewModel
@@ -38,13 +40,15 @@ class InventoryViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     private val _selectedLocation = MutableStateFlow<String?>(null)
     private val _shoppingDialogState = MutableStateFlow<InventoryItemWithProduct?>(null)
+    private val _depletedItemsPrompt = MutableStateFlow<List<InventoryItemWithProduct>>(emptyList())
 
     val uiState: StateFlow<InventoryUiState> = combine(
         inventoryRepository.getAllActiveItemsWithProduct(),
         _searchQuery,
         _selectedLocation,
-        _shoppingDialogState
-    ) { items, query, location, dialogItem ->
+        _shoppingDialogState,
+        _depletedItemsPrompt
+    ) { items, query, location, dialogItem, depletedItems ->
         val filtered = items.filter { itemWithProduct ->
             val matchesQuery = if (query.isBlank()) true else {
                 itemWithProduct.product.name.contains(query, ignoreCase = true) ||
@@ -67,12 +71,14 @@ class InventoryViewModel @Inject constructor(
 
         InventoryUiState(
             items = filtered,
+            allActiveItems = items,
             suggestions = suggestions,
             searchQuery = query,
             selectedLocation = location,
             isLoading = false,
             showShoppingDialog = dialogItem != null,
-            itemToAddToShopping = dialogItem
+            itemToAddToShopping = dialogItem,
+            depletedItemsToPrompt = depletedItems
         )
     }.stateIn(
         scope = viewModelScope,
@@ -117,6 +123,50 @@ class InventoryViewModel @Inject constructor(
     fun deleteItem(item: InventoryItemEntity) {
         viewModelScope.launch {
             inventoryRepository.deleteItem(item)
+        }
+    }
+
+    fun consumeSelectedItems(deductions: Map<Int, Int>) {
+        viewModelScope.launch {
+            try {
+                val depleted = mutableListOf<InventoryItemWithProduct>()
+                deductions.forEach { (itemId, qty) ->
+                    val itemWithProduct = uiState.value.allActiveItems.find { it.item.id == itemId }
+                    if (itemWithProduct != null) {
+                        val item = itemWithProduct.item
+                        if (item.quantity > qty) {
+                            inventoryRepository.updateItem(item.copy(quantity = item.quantity - qty))
+                        } else {
+                            depleted.add(itemWithProduct)
+                            inventoryRepository.markAsConsumed(itemId)
+                        }
+                    }
+                }
+                if (depleted.isNotEmpty()) {
+                    _depletedItemsPrompt.value = depleted
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun addDepletedToShopping(items: List<InventoryItemWithProduct>) {
+        viewModelScope.launch {
+            items.forEach { itemWithProduct ->
+                shoppingRepository.addItem(ShoppingItemEntity(name = itemWithProduct.product.name))
+            }
+            _depletedItemsPrompt.value = emptyList()
+        }
+    }
+
+    fun dismissDepletedPrompt() {
+        _depletedItemsPrompt.value = emptyList()
+    }
+
+    fun seedTestData() {
+        viewModelScope.launch {
+            inventoryRepository.seedTestData()
         }
     }
 }
